@@ -158,6 +158,10 @@ suite('Nfc Manager Functions', function() {
     });
   });
 
+  suite('handleNdefMessage and formatXXX methods', function() {
+    
+  });
+
   suite('NFC Utils', function() {
 
     var string1;
