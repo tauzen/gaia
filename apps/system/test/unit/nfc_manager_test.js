@@ -159,7 +159,18 @@ suite('Nfc Manager Functions', function() {
   });
 
   suite('handleNdefMessage and formatXXX methods', function() {
-    
+    var activityName = 'nfc-ndef-discovered';    
+
+    test('TNF empty', function() {
+      var dummyNdefMessage = [new MozNDEFRecord(NDEF.TNF_EMPTY, null, null, null)];
+      var spyFormatEmpty = this.sinon.spy(NfcManager, 'formatEmpty');
+
+      var activityOptions = NfcManager.handleNdefMessage(dummyNdefMessage);
+      assert.isTrue(spyFormatEmpty.calledOnce);
+      assert.equal(activityOptions.name, activityName);
+      assert.equal(activityOptions.data.type, 'empty');
+      assert.equal(activityOptions.data.records, dummyNdefMessage);
+    });
   });
 
   suite('NFC Utils', function() {
