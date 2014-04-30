@@ -159,17 +159,21 @@ suite('Nfc Manager Functions', function() {
   });
 
   suite('handleNdefMessage and formatXXX methods', function() {
-    var activityName = 'nfc-ndef-discovered';
+    var commonTestsHelper = function(message, spy, type) {
+      var activityOptions = NfcManager.handleNdefMessage(message);
+      
+      assert.isTrue(spy.calledOnce);
+      assert.equal(activityOptions.name, 'nfc-ndef-discovered');
+      assert.equal(activityOptions.data.type, type);
+      assert.equal(activityOptions.data.records, message);
+
+      return activityOptions;
+    };
 
     test('TNF empty', function() {
       var dummyNdefMsg = [new MozNDEFRecord(NDEF.TNF_EMPTY, null, null, null)];
       var spyFormatEmpty = this.sinon.spy(NfcManager, 'formatEmpty');
-
-      var activityOptions = NfcManager.handleNdefMessage(dummyNdefMsg);
-      assert.isTrue(spyFormatEmpty.calledOnce);
-      assert.equal(activityOptions.name, activityName);
-      assert.equal(activityOptions.data.type, 'empty');
-      assert.equal(activityOptions.data.records, dummyNdefMsg);
+      commonTestsHelper(dummyNdefMsg, spyFormatEmpty, 'empty');
     });
 
     test('TNF well known rtd text utf 8', function() {
@@ -186,20 +190,19 @@ suite('Nfc Manager Functions', function() {
       var spyFormatWellKnownRecord = this.sinon.spy(NfcManager,
                                                     'formatWellKnownRecord');
 
-      var activityOptions = NfcManager.handleNdefMessage(dummyNdefMsg);
-      assert.isTrue(spyFormatWellKnownRecord.calledOnce);
+      var activityOptions = commonTestsHelper(dummyNdefMsg,
+                                              spyFormatWellKnownRecord,
+                                              'text');
       assert.isTrue(spyFormatTextRecord.calledOnce);
-      assert.equal(activityOptions.name, activityName);
-      assert.equal(activityOptions.data.type, 'text');
       assert.equal(activityOptions.data.text, 'Hey! UTF-8 en');
       assert.equal(activityOptions.data.rtd, NDEF.RTD_TEXT);
       assert.equal(activityOptions.data.language, 'en');
       assert.equal(activityOptions.data.encoding, 'UTF-8');
-      assert.equal(activityOptions.data.records, dummyNdefMsg);
+
     });
 
     test('TNF well known rtd uri', function() {
-      var payload1 = new Uint8Array([4, 119, 105, 107, 
+      var payload1 = new Uint8Array([4, 119, 105, 107,
                                         105, 46, 109, 111,
                                         122, 105, 108, 108,
                                         97, 46, 111, 114,
@@ -216,14 +219,12 @@ suite('Nfc Manager Functions', function() {
       var spyFormatWellKnownRecord = this.sinon.spy(NfcManager,
                                                     'formatWellKnownRecord');
       
-      var activityOptions = NfcManager.handleNdefMessage(dummyNdefMsg);
-      assert.isTrue(spyFormatWellKnownRecord.calledOnce);
+      var activityOptions = commonTestsHelper(dummyNdefMsg,
+                                              spyFormatWellKnownRecord,
+                                              'url');
       assert.isTrue(spyFormatURIRecord.calledOnce);
-      assert.equal(activityOptions.name, activityName);
-      assert.equal(activityOptions.data.type, 'url');
       assert.equal(activityOptions.data.url,
                    'https://wiki.mozilla.org/WebAPI/WebNFC');
-      assert.equal(activityOptions.data.records, dummyNdefMsg);
     });
 
     test('TNF well known smart poster', function() {
@@ -238,12 +239,9 @@ suite('Nfc Manager Functions', function() {
       var spyFormatWellKnownRecord = this.sinon.spy(NfcManager,
                                                     'formatWellKnownRecord');
 
-      var activityOptions = NfcManager.handleNdefMessage(dummyNdefMsg);
-      assert.isTrue(spyFormatWellKnownRecord.calledOnce);
+      commonTestsHelper(dummyNdefMsg, spyFormatWellKnownRecord, 'smartposter');
       assert.isTrue(spyFormatSPRecord.calledOnce);
-      assert.equal(activityOptions.name, activityName);
-      assert.equal(activityOptions.data.type, 'smartposter');
-      assert.equal(activityOptions.data.records, dummyNdefMsg);
+
     });
 
   });
@@ -555,7 +553,7 @@ suite('Nfc Manager Functions', function() {
       var activityOptions1 = NfcManager.handleNdefMessage(dummyNdefMsg);
       assert.isTrue(spyFormatWellKnownRecord.calledOnce);
       assert.isTrue(spyFormatTextRecord.calledOnce);
-      assert.equal(activityOptions1.name, activityName);
+      assert.equal(activityOptions1.name, 'nfc-ndef-discovered');
       assert.equal(activityOptions1.data.type, 'text');
       assert.equal(activityOptions1.data.text, 'Ho! UTF-16 en');
       assert.equal(activityOptions1.data.rtd, NDEF.RTD_TEXT);
