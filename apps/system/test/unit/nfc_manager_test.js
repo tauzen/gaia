@@ -159,10 +159,12 @@ suite('Nfc Manager Functions', function() {
   });
 
   suite('handleNdefMessage and formatXXX methods', function() {
-    var commonTestsHelper = function(message, spy, type) {
-      var activityOptions = NfcManager.handleNdefMessage(message);
+    
+    var commonTestsHelper = function(message, methodName, type) {
+      var spy = this.sinon.spy(NfcManager, methodName);
       
-      assert.isTrue(spy.calledOnce);
+      var activityOptions = NfcManager.handleNdefMessage(message);  
+      assert.isTrue(spy.calledOnce, methodName + ' not called once');
       assert.equal(activityOptions.name, 'nfc-ndef-discovered');
       assert.equal(activityOptions.data.type, type);
       assert.equal(activityOptions.data.records, message);
@@ -172,8 +174,7 @@ suite('Nfc Manager Functions', function() {
 
     test('TNF empty', function() {
       var dummyNdefMsg = [new MozNDEFRecord(NDEF.TNF_EMPTY, null, null, null)];
-      var spyFormatEmpty = this.sinon.spy(NfcManager, 'formatEmpty');
-      commonTestsHelper(dummyNdefMsg, spyFormatEmpty, 'empty');
+      commonTestsHelper.call(this, dummyNdefMsg, 'formatEmpty', 'empty');
     });
 
     test('TNF well known rtd text utf 8', function() {
@@ -185,20 +186,18 @@ suite('Nfc Manager Functions', function() {
                                             NDEF.RTD_TEXT,
                                             new Uint8Array(),
                                             payload)];
-
       var spyFormatTextRecord = this.sinon.spy(NfcManager, 'formatTextRecord');
-      var spyFormatWellKnownRecord = this.sinon.spy(NfcManager,
-                                                    'formatWellKnownRecord');
-
-      var activityOptions = commonTestsHelper(dummyNdefMsg,
-                                              spyFormatWellKnownRecord,
-                                              'text');
+      
+      var activityOptions = commonTestsHelper.call(this,
+                                                   dummyNdefMsg,
+                                                   'formatWellKnownRecord',
+                                                   'text');
+                                        
       assert.isTrue(spyFormatTextRecord.calledOnce);
       assert.equal(activityOptions.data.text, 'Hey! UTF-8 en');
       assert.equal(activityOptions.data.rtd, NDEF.RTD_TEXT);
       assert.equal(activityOptions.data.language, 'en');
       assert.equal(activityOptions.data.encoding, 'UTF-8');
-
     });
 
     test('TNF well known rtd uri', function() {
@@ -216,12 +215,11 @@ suite('Nfc Manager Functions', function() {
                                             payload1)];
 
       var spyFormatURIRecord = this.sinon.spy(NfcManager, 'formatURIRecord');
-      var spyFormatWellKnownRecord = this.sinon.spy(NfcManager,
-                                                    'formatWellKnownRecord');
       
-      var activityOptions = commonTestsHelper(dummyNdefMsg,
-                                              spyFormatWellKnownRecord,
-                                              'url');
+      var activityOptions = commonTestsHelper.call(this,
+                                                  dummyNdefMsg,
+                                                  'formatWellKnownRecord',
+                                                  'url');
       assert.isTrue(spyFormatURIRecord.calledOnce);
       assert.equal(activityOptions.data.url,
                    'https://wiki.mozilla.org/WebAPI/WebNFC');
@@ -236,12 +234,10 @@ suite('Nfc Manager Functions', function() {
 
       var spyFormatSPRecord = this.sinon.spy(NfcManager,
                                              'formatSmartPosterRecord');
-      var spyFormatWellKnownRecord = this.sinon.spy(NfcManager,
-                                                    'formatWellKnownRecord');
 
-      commonTestsHelper(dummyNdefMsg, spyFormatWellKnownRecord, 'smartposter');
+      commonTestsHelper.call(this, dummyNdefMsg, 
+                             'formatWellKnownRecord', 'smartposter');
       assert.isTrue(spyFormatSPRecord.calledOnce);
-
     });
 
   });
@@ -529,7 +525,7 @@ suite('Nfc Manager Functions', function() {
     });
   });
 
-  suite.skip('UTF 16 support', function() {
+  suite.skip('handleNdefMessage not supported records', function() {
     test('TNF well known rtd text utf 16', function() {
       console.log(this);
       var payload = Uint8Array([-126, 101, 110, -1,
@@ -546,13 +542,7 @@ suite('Nfc Manager Functions', function() {
                                             new Uint8Array(),
                                             payload)];
 
-      var spyFormatTextRecord = this.sinon.spy(NfcManager, 'formatTextRecord');
-      var spyFormatWellKnownRecord = this.sinon.spy(NfcManager,
-                                                    'formatWellKnownRecord');
-
       var activityOptions1 = NfcManager.handleNdefMessage(dummyNdefMsg);
-      assert.isTrue(spyFormatWellKnownRecord.calledOnce);
-      assert.isTrue(spyFormatTextRecord.calledOnce);
       assert.equal(activityOptions1.name, 'nfc-ndef-discovered');
       assert.equal(activityOptions1.data.type, 'text');
       assert.equal(activityOptions1.data.text, 'Ho! UTF-16 en');
@@ -560,6 +550,25 @@ suite('Nfc Manager Functions', function() {
       assert.equal(activityOptions1.data.language, 'en');
       assert.equal(activityOptions1.data.encoding, 'UTF-16');
       assert.equal(activityOptions1.data.records, dummyNdefMsg);
+    });
+
+    test('TNF absolute uri', function() {
+      //TNF_ABSOLUTE_URI has uri in the type
+      var type = new Uint8Array([0x68, 0x74, 0x74, 0x70,
+                                 0x3A, 0x2F, 0x2F, 0x6D,
+                                 0x6F, 0x7A, 0x69, 0x6C,
+                                 0x6C, 0x61, 0x2E, 0x6F,
+                                 0x72, 0x67]);
+      var dummyNdefMsg = [new MozNDEFRecord(NDEF.TNF_ABSOLUTE_URI,
+                                            type,
+                                            new Uint8Array(),
+                                            new Uint8Array())];
+      
+      
+      var activityOptions = NfcManager.handleNdefMessage(dummyNdefMsg);  
+      assert.equal(activityOptions.name, 'nfc-ndef-discovered');
+      assert.equal(activityOptions.data.type, 'http://mozilla.org');
+      assert.equal(activityOptions.data.records, dummyNdefMsg);
     });
   });
 });
