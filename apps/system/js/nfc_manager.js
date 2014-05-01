@@ -154,7 +154,7 @@ var NfcManager = {
         action = this.formatWellKnownRecord(record);
         break;
       case NDEF.TNF_ABSOLUTE_URI:
-        action = this.formatURIRecord(record);
+        action = this.formatAbsoluteURIRecord(record);
         break;
       case NDEF.TNF_MIME_MEDIA:
         action = this.formatMimeMedia(record);
@@ -477,6 +477,17 @@ var NfcManager = {
       }
     };
     return activityText;
+  },
+
+  formatAbsoluteURIRecord: function nm_formaAbsoluteURIRecord(record) {
+    this._debug('formatAbsoluteURIRecord');
+    var activityOptions = {
+      name: 'nfc-ndef-discovered',
+      data: {
+        type: NfcUtils.toUTF8(record.type)
+      }
+    };
+    return activityOptions;
   },
 
   formatURIRecord: function nm_formatURIRecord(record) {
