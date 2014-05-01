@@ -162,8 +162,8 @@ suite('Nfc Manager Functions', function() {
     
     var commonTestsHelper = function(message, methodName, type) {
       var spy = this.sinon.spy(NfcManager, methodName);
-      
-      var activityOptions = NfcManager.handleNdefMessage(message);  
+
+      var activityOptions = NfcManager.handleNdefMessage(message);
       assert.isTrue(spy.calledOnce, methodName + ' not called once');
       assert.equal(activityOptions.name, 'nfc-ndef-discovered');
       assert.equal(activityOptions.data.type, type);
@@ -235,7 +235,7 @@ suite('Nfc Manager Functions', function() {
       var spyFormatSPRecord = this.sinon.spy(NfcManager,
                                              'formatSmartPosterRecord');
 
-      commonTestsHelper.call(this, dummyNdefMsg, 
+      commonTestsHelper.call(this, dummyNdefMsg,
                              'formatWellKnownRecord', 'smartposter');
       assert.isTrue(spyFormatSPRecord.calledOnce);
     });
@@ -565,7 +565,7 @@ suite('Nfc Manager Functions', function() {
                                             new Uint8Array())];
       
       
-      var activityOptions = NfcManager.handleNdefMessage(dummyNdefMsg);  
+      var activityOptions = NfcManager.handleNdefMessage(dummyNdefMsg);
       assert.equal(activityOptions.name, 'nfc-ndef-discovered');
       assert.equal(activityOptions.data.type, 'http://mozilla.org');
       assert.equal(activityOptions.data.records, dummyNdefMsg);
