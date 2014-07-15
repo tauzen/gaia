@@ -40,7 +40,7 @@ var NfcManager = {
     'Unsupported': 20
   },
 
-  _debug: function nm_debug(msg, optObject) {
+  _debug: function _debug(msg, optObject) {
     if (this.DEBUG) {
       var output = '[DEBUG] SYSTEM NFC: ' + msg;
       if (optObject) {
