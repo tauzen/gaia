@@ -508,7 +508,7 @@ var NfcHandoverManager = {
    */
   _handleHandoverRequest: function _handleHandoverRequest(ndef, session) {
     this._debug('_handleHandoverRequest');
-    this.bluetoothWasEnabled = this.bluetooth.enabled;
+    this._saveBluetoothStatus();
     this._doAction({callback: this._doHandoverRequest, args: [ndef, session]});
   },
 

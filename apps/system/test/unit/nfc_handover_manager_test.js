@@ -162,6 +162,19 @@ suite('Nfc Handover Manager Functions', function() {
       spySendNDEF.restore();
     });
 
+    test('_handleHandoverRequest() calls proper methods', function() {
+      var stubSaveBluetooth = this.sinon.stub(NfcHandoverManager, 
+                                              '_saveBluetoothStatus');
+      var stubDoAction = this.sinon.stub(NfcHandoverManager, '_doAction');
+
+      NfcHandoverManager._handleHandoverRequest('ndef', 'session');
+      assert.isTrue(stubSaveBluetooth.calledOnce, 'Bluetooth status not saved');
+      assert.deepEqual(stubDoAction.firstCall.args[0], {
+        callback: NfcHandoverManager._doHandoverRequest,
+        args: ['ndef', 'session']
+      });
+    }); 
+
     test('_handleHandoverRequest(): sends Hs message to peer', function() {
       var handoverRequest = NDEFUtils.encodeHandoverRequest(mac, cps);
       NfcHandoverManager._handleHandoverRequest(handoverRequest);
