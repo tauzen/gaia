@@ -865,7 +865,8 @@ var Contacts = (function() {
     }
 
     document.addEventListener('visibilitychange', function visibility(e) {
-      if (ActivityHandler.currentlyHandling && document.hidden) {
+      if (ActivityHandler.currentlyHandling && document.hidden &&
+          ActivityHandler.currentActivityIsNot(['import'])) {
         ActivityHandler.postCancel();
         return;
       }
