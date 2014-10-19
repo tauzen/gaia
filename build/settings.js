@@ -241,7 +241,7 @@ function execute(config) {
   settings['rocketbar.newTabAppURL'] = utils.gaiaOriginURL('search',
     config.GAIA_SCHEME, config.GAIA_DOMAIN, config.GAIA_PORT) + '/index.html';
 
-  settings['debugger.remote-mode'] = config.REMOTE_DEBUGGER ? 'adb-only'
+  settings['debugger.remote-mode'] = config.REMOTE_DEBUGGER ? 'adb-devtools'
                                                             : 'disabled';
 
   if (config.PRODUCTION === '1') {
