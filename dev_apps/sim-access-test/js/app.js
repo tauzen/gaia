@@ -23,6 +23,17 @@ window.addEventListener('DOMContentLoaded', function() {
     }
     return new Uint8Array(a);
   };
+
+  // exporting APDUs
+  window.APDU = {
+    getResponse: new window.SECommand(0x00, 0xC0, 0x00, 0x00, new Uint8Array()),
+    readBinary: new window.SECommand(0x00, 0xB0, 0x00, 0x00, new Uint8Array()),
+    selectODF: new window.SECommand(0x00, 0xA4, 0x00, 0x04, new Uint8Array([0x50, 0x31]))
+  };
+
+  window.AID = {
+    pkcs15: 'a000000063504b43532d3135'
+  };
   
   function log(msg) {
     console.log(msg);
@@ -31,12 +42,27 @@ window.addEventListener('DOMContentLoaded', function() {
     document.getElementById('log').appendChild(li);
   }
 
-  var ppasAIDStr = '325041592E5359532E4444463031';
-  var ppseAIDByte = window.hexString2byte(ppasAIDStr);
-  var getTemplateAPDU = new window.SECommand(0x80, 0xD4, 0x01, 0x00, new Uint8Array());
-  var expectedResponse = '6F23840E325041592E5359532E4444463031A511BF0C0E610C4F07A0000000041010870101';
+  function logResponse(response) {
+    log('Got response from SIM: (SW1:'+ response.sw1 +
+        ', SW2:' + response.sw2 + ', data:' + window.byte2hexString(response.data) +')');
+  }
 
-  log('Testing SIM access using PPSE applet');
+  function checkResponse(response, expectedSw1, expectedSw2, expectedData) {
+    var sw1Check = response.sw1 === expectedSw1;
+    var sw2Check = response.sw2 === expectedSw2;
+    var dataCheck = window.byte2hexString(response.data) === expectedData;
+    if (sw1Check && sw2Check && dataCheck) {
+      log('Response valid!');
+      return true;
+    } else {
+      log('Test failed, SW1: ' + sw1Check + ', SW2: ' + sw2Check + ', data: ' + dataCheck);
+      return false;
+    }
+  }
+
+  var selectODFResp = '62228202412183025031A503C001408A01058B066F060101000180020010810200228800';
+
+  log('Testing SIM access using  applet');
   window.navigator.seManager.getSEReaders()
   .then((readers) => {
     log('Get SEReaders, using reader 0 to open session.');
@@ -46,28 +72,31 @@ window.addEventListener('DOMContentLoaded', function() {
     log('Session opened, exporting as |window.testSESession| for manual testing via WebIDE console.');
     window.testSESession = session;
     
-    log('Opening channel to PPSE, AID: ' + ppasAIDStr);
-    return session.openLogicalChannel(ppseAIDByte);
+    log('Opening channel to pkcs15, AID: ' + window.AID.pkcs15);
+    return session.openLogicalChannel(window.hexString2byte(window.AID.pkcs15));
   })
   .then((channel) => {
-    log('Channel opened, sending APDU: (CLA:' + getTemplateAPDU.cla + ', INS:' + getTemplateAPDU.ins + 
-        ' P1:' + getTemplateAPDU.p1 + ', P2:' + getTemplateAPDU.p2 + ', data:' + getTemplateAPDU.data + ')');
-    return channel.transmit(getTemplateAPDU);
+    log('Channel opened, getting SELECT response');
+    return channel.transmit(window.APDU.getResponse);
   })
   .then((response) => {
-    log('Got response from SIM: (SW1:'+ response.sw1 + 
-        ', SW2:' + response.sw2 + ', data:' + byte2hexString(response.data) +')');
+    logResponse(response);
     
-    var sw1Check = response.sw1 === 0x90;
-    var sw2Check = response.sw2 === 0x00; 
-    var dataCheck = byte2hexString(response.data) === expectedResponse;
-    if (sw1Check && sw2Check && dataCheck) {
-      log('Response valid!');
-    } else {
-      log('Test failed, SW1: ' + sw1Check + ', SW2: ' + sw2Check + ', data: ' + dataCheck);
-    }
+    log('Selecting ODF');
+    return response.channel.transmit(window.APDU.selectODF);
+  })
+  .then((response) => {
+    logResponse(response);
+    checkResponse(response, 0x61, 0x24, '');
 
-    log('Closing logical channel');
+    log('Reading select ODF response');
+    return response.channel.transmit(window.APDU.getResponse);
+  })
+  .then((response) => {
+    logResponse(response);
+    checkResponse(response, 0x90, 0x00, selectODFResp);
+
+    log('Closing channel');
     return response.channel.close();
   })
   .then(() => log('Channel closed. Test finished.'))
