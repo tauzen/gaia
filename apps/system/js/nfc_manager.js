@@ -227,6 +227,8 @@
       }
     },
 
+    _settingsChange: false,
+
     /**
      * Basing on the new value of NFC Setting computes new NFC HW state
      * and uses {@link NfcManager#_changeHardwareState} to set it
@@ -234,6 +236,12 @@
      * @param {boolean} enabled - NFC setting value
      */
     _nfcSettingsChanged: function nm_nfcSettingsChanged(enabled) {
+      if (this.isActive() === enabled) {
+        console.log('NFC HW same as settings: ' + enabled);
+        return;
+      }
+
+      this._settingsChange = true;
       var state = !enabled ? this.NFC_HW_STATE.OFF :
         (System.locked ? this.NFC_HW_STATE.DISABLE_DISCOVERY :
                          this.NFC_HW_STATE.ON);
@@ -278,6 +286,14 @@
 
       req.onsuccess = () => {
         this._debug('_changeHardwareState ' + state + ' success');
+        console.log('XXNFC we got on success');
+        if (this._settingsChange) { 
+          console.log('XXNFC manully changing settings to: ' + this.isActive());
+          SettingsListener.getSettingsLock().set({ 
+            'nfc.status': (this.isActive()) ? 'enabled':'disabled'
+          });
+          this._settingsChange = false;
+        }
       };
       req.onerror = () => {
         this._logVisibly('_changeHardwareState ' + state + ' error ' +
