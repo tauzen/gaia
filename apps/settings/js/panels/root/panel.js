@@ -37,7 +37,6 @@ define(function(require) {
       onInit: function rp_onInit(panel) {
         root.init();
         bluetoothItem = BluetoothItem(panel.querySelector('.bluetooth-desc'));
-        // todo ??
         nfcItem = NFCItem({
           nfcMenuItem: panel.querySelector('.nfc-settings'),
           nfcCheckBox: panel.querySelector('#nfc-input'), 
@@ -71,6 +70,7 @@ define(function(require) {
           HomescreenItem(panel.querySelector('#homescreens-section'));
       },
       onBeforeShow: function rp_onBeforeShow() {
+        // QUESTION: Should I enable/disable nfcCheckBox here also?
         bluetoothItem.enabled = true;
         languageItem.enabled = true;
         batteryItem.enabled = true;
