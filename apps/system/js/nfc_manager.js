@@ -294,7 +294,7 @@
 
       req.onsuccess = () => {
         this._debug('_changeHardwareState ' + state + ' success');
-        // checking if NFC HW was in transition states
+        // checking if NFC HW was in transition states and move to proper
         if (this.isInTransition()) {
           this._handleNFCOnOff(this._hwState === this.NFC_HW_STATE.ENABLING);
         }
@@ -302,7 +302,7 @@
       req.onerror = () => {
         this._logVisibly('_changeHardwareState ' + state + ' error ' +
                          req.error.name);
-        // rollback to previous states in case of enabling and disabling
+        // rollback to previous state in case of transition states
         if (this.isInTransition()) {
           this._handleNFCOnOff(this._hwState !== this.NFC_HW_STATE.ENABLING);
         }

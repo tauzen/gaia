@@ -7,12 +7,12 @@ define(function(require) {
   'use strict';
 
   var SettingsListener = require('shared/settings_listener');
-  
+
   /**
    * @alias module:panels/root/nfc_item
    * @class NFCItem
    * @param {Object} elements
-   * @param {HTMLElement} elements.nfcMenuItem 
+   * @param {HTMLElement} elements.nfcMenuItem
    * @param {HTMLElement} elements.nfcCheckBox
    * @returns {NFCItem}
    */
@@ -22,12 +22,12 @@ define(function(require) {
       elements.nfcMenuItem.hidden = true;
       return;
     }
-    elements.nfcMenuItem.hidden = false;  
+    elements.nfcMenuItem.hidden = false;
     this._checkbox = elements.nfcCheckBox;
-    
+
     this._boundOnCheckboxChanged = this._onCheckboxChanged.bind(this);
-    this._boundNfcStatusChanged = this._onNfcStatusChanged.bind(this);    
-    
+    this._boundNfcStatusChanged = this._onNfcStatusChanged.bind(this);
+
     this._init();
   }
 
@@ -43,7 +43,7 @@ define(function(require) {
     },
 
     _onNfcStatusChanged: function ni_onNfcStatusChanged(status) {
-      if (this._checkbox.disabled && 
+      if (this._checkbox.disabled &&
           ['enabled', 'disabled'].indexOf(status) !== -1) {
         this._checkbox.disabled = false;
         this._checkbox.checked = (status === 'enabled') ? true : false;

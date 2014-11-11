@@ -39,7 +39,7 @@ define(function(require) {
         bluetoothItem = BluetoothItem(panel.querySelector('.bluetooth-desc'));
         nfcItem = NFCItem({
           nfcMenuItem: panel.querySelector('.nfc-settings'),
-          nfcCheckBox: panel.querySelector('#nfc-input'), 
+          nfcCheckBox: panel.querySelector('#nfc-input')
         });
         languageItem = LanguageItem(panel.querySelector('.language-desc'));
         batteryItem = BatteryItem(panel.querySelector('.battery-desc'));
