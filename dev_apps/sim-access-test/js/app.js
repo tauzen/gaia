@@ -156,7 +156,7 @@ window.addEventListener('DOMContentLoaded', function() {
   })
   .then((response) => {
     logResponse(response);
-    //the length of ODF select response is variable, therefore, only to compare the sw1.
+    //the length of  select EF_ODF response is variable, therefore, only to compare the sw1.
     checkResponse(response, 0x61, response.sw2, '');
 
     log('Reading select ODF response');
@@ -164,7 +164,7 @@ window.addEventListener('DOMContentLoaded', function() {
   })
   .then((response) => {
     logResponse(response);
-    //the selectResponse data of EF-ODF is variable depending on used SIM types(Gemalto, G&D, etc.), therefore, not to compare response data.
+    //the selectResponse data of EF_ODF is variable depending on the used SIM types(Gemalto, G&D, etc.), therefore, not to compare response data.
     if (checkResponse(response, 0x90, 0x00, '')) {
       updateTestStatus('test-pkcs', 'success', 'Valid ODF response, END. OK.');
     } else {
