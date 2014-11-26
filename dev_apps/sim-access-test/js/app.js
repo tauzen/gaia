@@ -93,6 +93,7 @@ window.addEventListener('DOMContentLoaded', function() {
   window.AID = {
     pkcs15: 'a000000063504b43532d3135',
     crs: 'A00000015143525300',
+    ppse: '325041592E5359532E4444463031'
   };
   
   function log(msg) {
@@ -126,8 +127,6 @@ window.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  var selectODFResp = '62228202412183025031A503C001408A01058B066F060101000180020010810200228800';
-
   log('Testing SIM access using  applet');
   updateTestStatus('test-init', 'pending', 'in progress');
   window.navigator.seManager.getSEReaders()
@@ -140,19 +139,31 @@ window.addEventListener('DOMContentLoaded', function() {
     updateTestStatus('test-init', 'success', 'Got SESession, END. OK.');
     window.testSESession = session;
     
-    log('Opening channel to pkcs15, AID: ' + window.AID.pkcs15);
-    updateTestStatus('test-pkcs', 'pending', 'in progress');
-    return session.openLogicalChannel(window.hexString2byte(window.AID.pkcs15));
+    updateTestStatus('test-channel-resp', 'pending', 'in progress');
+    log('Opening channel to ppse, AID' + window.AID.ppse);
+    return session.openLogicalChannel(window.hexString2byte(window.AID.ppse));
   })
   .then((channel) => {
-    log('Channel opened, getting SELECT response');
-    return channel.transmit(window.APDU.getResponse);
+    log('Channel to PPSE opened, checking SELECT response (openResponse)');
+    if(channel.openResponse) {
+      log('Select response is: ' + window.byte2hexString(channel.selectResponse));
+      updateTestStatus('test-channel-resp', 'success', 'Got SELECT response, END. OK.');
+    } else {
+      log('Select response not available');
+      updateTestStatus('test-channel-resp', 'error', 'No SELECT response, END, FAILED.');
+    }
+    log('Closing channel to PPSE');
+    return channel.close();
   })
-  .then((response) => {
-    logResponse(response);
-    
-    log('Selecting ODF');
-    return response.channel.transmit(window.APDU.selectODF);
+  .then(() => {
+    log('Closed channel to PPSE');
+    updateTestStatus('test-pkcs', 'pending', 'in progress');
+    log('Opening channel to pkcs15, AID: ' + window.AID.pkcs15);
+    return window.testSESession.openLogicalChannel(window.hexString2byte(window.AID.pkcs15));
+  })
+  .then((channel) => {
+    log('Channel opened, selecting ODF');
+    return channel.transmit(window.APDU.selectODF);
   })
   .then((response) => {
     logResponse(response);
