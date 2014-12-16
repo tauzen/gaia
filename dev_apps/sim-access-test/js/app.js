@@ -198,6 +198,46 @@ window.addEventListener('DOMContentLoaded', function() {
     }
     return resp.channel.close();
   })
+  .then(() => {
+    log('Starting two channel test');
+    updateTestStatus('test-double-channel', 'pending', 'Starting test');
+    log('Opening channel to CRS');
+    return window.testSESession.openLogicalChannel(window.hexString2byte(window.AID.crs));
+  })
+  .then((channel) => {
+    if(!channel) {
+      log('Channel to CRS not opened');
+      updateTestStatus('test-double-channel', 'error', 'Channel to CRS not opened, test failed.');
+      return Promise.reject();
+    }
+    // not elegant, for test purpose only
+    window.crsChannel = channel;
+    updateTestStatus('test-double-channel', 'pending', 'CRS channel opnened');
+    log('CRS channel opened, opening channel to PKCS15');
+    return window.testSESession.openLogicalChannel(window.hexString2byte(window.AID.PKCS15));
+  })
+  .then((channel) => {
+    if(!channel) {
+      log('Channel to PKCS15 not opened');
+      updateTestStatus('test-double-channel', 'error', 'Channel to PKCS15 not opened, test failed.');
+      return Promise.reject();
+    }
+
+    window.pkcsChannel = channel;
+    log('PKCS15 channel opened');
+    updateTestStatus('test-double-channel', 'pending', 'PKCS channel opnened, two channels open now, closing');
+    log('Calling SESession.closeAll()');
+    return window.testSESession.closeAll();
+  })
+  .then(() => {
+    log('closing finished, checking if everything is closed');
+    if(window.testSESession.isClosed && window.crsChannel.isClosed && window.pkcsChannel.isClosed) {
+      updateTestStatus('test-double-channel', 'success', 'Closed everything, success.');
+    } else {
+      updateTestStatus('test-double-channel', 'error', 'Objects not closed, failed.');
+      return Promise.reject();
+    }
+  })
   .then(() => log('Channel closed, tests finished.'))
   .catch(() => {
     log('Promise chain broken, test failed');
