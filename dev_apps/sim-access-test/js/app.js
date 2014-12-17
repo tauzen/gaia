@@ -46,7 +46,11 @@ window.addEventListener('DOMContentLoaded', function() {
   })
   .then((session) => {
     log('Session opened, saving as window.testSESession for testing.');
-    updateTestStatus('test-init', 'success', 'Got SESession, END. OK.');
+    if(!session.isClosed) {
+      updateTestStatus('test-init', 'success', 'Got SESession, END. OK.');
+    } else {
+      updateTestStatus('test-init', 'error', 'SESession closed, Failed.');
+    }
     window.testSESession = session;
     
     updateTestStatus('test-channel-resp', 'pending', 'in progress');
@@ -55,15 +59,17 @@ window.addEventListener('DOMContentLoaded', function() {
   })
   .then((channel) => {
     log('Channel to PPSE opened, checking SELECT response (openResponse)');
-    if(channel.openResponse) {
+    if(channel.openResponse && !channel.isClosed) {
       log('Select response is: ' +
           Utils.byte2hexString(channel.selectResponse));
       updateTestStatus('test-channel-resp', 'success',
                        'Got SELECT response, END. OK.');
     } else {
-      log('Select response not available');
+      log('Select response not available or channel is closed');
+      var errorMsg = (channel.isClosed) ? 'Channel is closed'
+                                        : 'SELECT response not avialable';
       updateTestStatus('test-channel-resp', 'error',
-                       'No SELECT response, END, FAILED.');
+                       errorMsg + ', END, FAILED.');
     }
     log('Closing channel to PPSE');
     return channel.close();
@@ -134,7 +140,7 @@ window.addEventListener('DOMContentLoaded', function() {
     updateTestStatus('test-double-channel', 'pending', 'CRS channel opnened');
     log('CRS channel opened, opening channel to PKCS15');
     return window.testSESession
-                 .openLogicalChannel(Utils.hexString2byte(AID.PKCS15));
+                 .openLogicalChannel(Utils.hexString2byte(AID.pkcs15));
   })
   .then((channel) => {
     if(!channel) {
@@ -160,7 +166,6 @@ window.addEventListener('DOMContentLoaded', function() {
     } else {
       updateTestStatus('test-double-channel', 'error',
                        'Objects not closed, failed.');
-      return Promise.reject();
     }
   })
   .then(() => log('Channel closed, tests finished.'))
