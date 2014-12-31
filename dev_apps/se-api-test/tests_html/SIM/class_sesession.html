@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1">
+    <meta charset="utf-8">
+    <title>Secure Element Test</title>
+    <script defer src="../../js/common.js"></script>
+    <script defer src="../../js/SIM/class_sesession.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../style/UI.css">
+  </head>
+  <body>
+    <fieldset>
+      <legend style="font-weight:bold; color:blue">#3-1 The return Reader object for session instance is as same as reader instance</legend>
+      <section>
+        <button id="test3-1" style="font-size:20px">Test</button>
+        <button id="reset3-1" style="font-size:20px">Reset</button>
+	Test Result: <span id="result3-1" style="font-weight:bold">None</span>
+        <fieldset>
+           <legend>Logs</legend>
+           <ol id="logs3-1">
+           </ol>
+        </fieldset>
+      </section>
+    </fieldset>
+    <fieldset>
+      <legend style="font-weight:bold; color:blue">#3-2 Check an open session</legend>
+      <section>
+        <button id="test3-2" style="font-size:20px">Test</button>
+        <button id="reset3-2" style="font-size:20px">Reset</button>
+        Test Result: <span id="result3-2" style="font-weight:bold">None</span>
+        <fieldset>
+           <legend>Logs</legend>
+           <ol id="logs3-2">
+           </ol>
+        </fieldset>
+      </section>
+    </fieldset>
+    <fieldset>
+      <legend style="font-weight:bold; color:blue">#3-3 Open a logical channel</legend>
+      <section>
+        <button id="test3-3" style="font-size:20px">Test</button>
+        <button id="reset3-3" style="font-size:20px">Reset</button>
+        Test Result: <span id="result3-3" style="font-weight:bold">None</span>
+        <fieldset>
+           <legend>Logs</legend>
+           <ol id="logs3-3">
+           </ol>
+        </fieldset>
+      </section>
+    </fieldset>
+    <fieldset>
+      <legend style="font-weight:bold; color:blue">#3-4 Open a logical channel with illegal AID (length of AID is less than 5)</legend>
+      <section>
+        <button id="test3-4" style="font-size:20px">Test</button>
+        <button id="reset3-4" style="font-size:20px">Reset</button>
+        Test Result: <span id="result3-4" style="font-weight:bold">None</span>
+        <fieldset>
+           <legend>Logs</legend>
+           <ol id="logs3-4">
+           </ol>
+        </fieldset>
+      </section>
+    </fieldset>
+    <fieldset>
+      <legend style="font-weight:bold; color:blue">#3-5 Open a logical channel with illegal AID (length of AID is more than 16)</legend>
+      <section>
+        <button id="test3-5" style="font-size:20px">Test</button>
+        <button id="reset3-5" style="font-size:20px">Reset</button>
+        Test Result: <span id="result3-5" style="font-weight:bold">None</span>
+        <fieldset>
+           <legend>Logs</legend>
+           <ol id="logs3-5">
+           </ol>
+        </fieldset>
+      </section>
+    </fieldset>
+    <fieldset>
+      <legend style="font-weight:bold; color:blue">#3-6 Open a logical channel with an AID which is not available on SE</legend>
+      <section>
+        <button id="test3-6" style="font-size:20px">Test</button>
+        <button id="reset3-6" style="font-size:20px">Reset</button>
+        Test Result: <span id="result3-6" style="font-weight:bold">None</span>
+        <fieldset>
+           <legend>Logs</legend>
+           <ol id="logs3-6">
+           </ol>
+        </fieldset>
+      </section>
+    </fieldset>    
+    <fieldset>
+      <legend style="font-weight:bold; color:blue">#3-7 Open a logical channel when session is already closed</legend>
+      <section>
+        <button id="test3-7" style="font-size:20px">Test</button>
+        <button id="reset3-7" style="font-size:20px">Reset</button>
+        Test Result: <span id="result3-7" style="font-weight:bold">None</span>
+        <fieldset>
+           <legend>Logs</legend>
+           <ol id="logs3-7">
+           </ol>
+        </fieldset>
+      </section>
+    </fieldset>
+    <fieldset>
+      <legend style="font-weight:bold; color:blue">#3-8 Open a logical channel with AID which could not access SE (access control)</legend>
+      <section>
+        <button id="test3-8" style="font-size:20px">Test</button>
+        <button id="reset3-8" style="font-size:20px">Reset</button>
+        Test Result: <span id="result3-8" style="font-weight:bold">None</span>
+        <fieldset>
+           <legend>Logs</legend>
+           <ol id="logs3-8">
+           </ol>
+        </fieldset>
+      </section>
+    </fieldset>
+    <fieldset>
+      <legend style="font-weight:bold; color:blue">#3-9 Open multiple logical channels that over maximum capacity</legend>
+      <section>
+        <button id="test3-9" style="font-size:20px">Test</button>
+        <button id="reset3-9" style="font-size:20px">Reset</button>
+        Test Result: <span id="result3-9" style="font-weight:bold">None</span>
+        <fieldset>
+           <legend>Logs</legend>
+           <ol id="logs3-9">
+           </ol>
+        </fieldset>
+      </section>
+    </fieldset>
+    <fieldset>
+      <legend style="font-weight:bold; color:blue">#3-10 Close a session that open one channel</legend>
+      <section>
+        <button id="test3-10" style="font-size:20px">Test</button>
+        <button id="reset3-10" style="font-size:20px">Reset</button>
+        Test Result: <span id="result3-10" style="font-weight:bold">None</span>
+        <fieldset>
+           <legend>Logs</legend>
+           <ol id="logs3-10">
+           </ol>
+        </fieldset>
+      </section>
+    </fieldset>
+    <fieldset>
+      <legend style="font-weight:bold; color:blue">#3-11 Close a session that open multiple channels</legend>
+      <section>
+        <button id="test3-11" style="font-size:20px">Test</button>
+        <button id="reset3-11" style="font-size:20px">Reset</button>
+        Test Result: <span id="result3-11" style="font-weight:bold">None</span>
+        <fieldset>
+           <legend>Logs</legend>
+           <ol id="logs3-11">
+           </ol>
+        </fieldset>
+      </section>
+    </fieldset>
+    <fieldset>
+      <legend style="font-weight:bold; color:blue">#3-12 ATR(?)</legend>
+      <section>
+        <button id="test3-12" style="font-size:20px">Test</button>
+        <button id="reset3-12" style="font-size:20px">Reset</button>
+        Test Result: <span id="result3-12" style="font-weight:bold">None</span>
+        <fieldset>
+           <legend>Logs</legend>
+           <ol id="logs3-12">
+           </ol>
+        </fieldset>
+      </section>
+    </fieldset>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "SE API tests",
+  "launch_path": "/index.html",
+  "type": "certified",
+  "messages": [
+    { "notification": "/index.html" }
+  ],
+  "activities": {
+    "internal-system-engineering-mode": {
+      "filters": {},
+      "href": "/index.html",
+      "disposition": "window"
+     }
+  },
+  "icons": {
+    "120": "/style/icons/SIM_card.png"
+  },
+  "permissions": {
+    "secureelement-manage": {},
+    "mobileconnection":{}
+  }
+}

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1">
+  <meta charset="utf-8">
+  <title>SE API tests</title>
+  <!-- We don't need localization in this app -->
+  <link rel="stylesheet" type="text/css" href="style/uitest.css">
+  <link rel="stylesheet" type="text/css" href="style/tabs.css" >
+  <link rel="stylesheet" type="text/css" href="style/lists.css" >
+  <link rel="stylesheet" type="text/css" href="shared/style/lists.css">
+
+  <!-- Gaia Components -->
+  <script src="shared/elements/config.js"></script>
+  <script src="shared/elements/gaia-header/dist/gaia-header.js"></script>
+
+  <script type="text/javascript" src="js/uitest.js"></script>
+  <script defer src="shared/js/lazy_loader.js"></script>
+  <script defer src="shared/js/accessibility_helper.js"></script> 
+</head>
+<body class="theme-productivity">
+  <div class="panel list-panel">
+    <div id="NOSIM-tests" class="page">
+      <section role="region">
+        <gaia-header>
+          <h1>SE API Tests</h1>
+        </gaia-header>
+      </section>
+      <section data-type="list">
+        <ul class="sublist">
+          <li><a href="#test=NOSIM/class_sereader">Class SEReader</a></li>
+        </ul>
+      </section>
+    </div>
+    <div id="SIM-tests" class="page invisible">
+      <section role="region">
+        <gaia-header>
+          <h1 class="header-title">SE API Tests</h1>
+        </gaia-header>
+      </section>
+      <section data-type="list">
+        <ul class="sublist">
+          <li><a href="#test=SIM/class_sereader">Class SEReader</a></li>
+          <li><a href="#test=SIM/class_sesession">Class SESession</a></li>
+          <li><a href="#test=SIM/class_sechannel">Class SEChannel</a></li>
+        </ul>
+      </section>
+    </div>
+    <div id="tabs" class="tabs">
+      <ul role="tablist" class="bb-tablist" data-items="2">
+        <li id="panel1" role="presentation">
+          <a href="#NOSIM" id="NOSIM" role="tab" aria-controls="NOSIMpanel">Without-SIM</a>
+          <div id="NOSIMpanel" class="bb-tabpanel" role="tabpanel" aria-labelledby="NOSIM"></div>
+        </li>
+        <li id="panel3" role="presentation">
+          <a href="#SIM" id="SIM" role="tab" aria-controls="SIMpanel">With-SIM</a>
+          <div id="SIMpanel" class="bb-tabpanel" role="tabpanel" aria-labelledby="SIM"></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div id="test-panel" class="panel test-panel">
+    <section role="region">
+      <gaia-header id="test-panel-header" action="back">
+        <h1 id="test-panel-title" class="header-title"></h1>
+      </gaia-header>
+    </section>
+    <iframe id="test-iframe" mozallowfullscreen="true"></iframe>
+  </div>
+</body>
+</html>
