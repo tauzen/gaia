@@ -155,7 +155,7 @@ window.addEventListener('DOMContentLoaded', function() {
     updateTestStatus('test-double-channel', 'pending',
                      'PKCS channel opnened, two channels open now, closing');
     log('Calling SESession.closeAll()');
-    return window.testSESession.closeAll();
+    return window.testSESession.reader.closeAll();
   })
   .then(() => {
     log('closing finished, checking if everything is closed');
