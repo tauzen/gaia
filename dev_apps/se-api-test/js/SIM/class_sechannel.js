@@ -365,15 +365,6 @@ var SETest = {
       })
       .then((channel) => {
         window.c2 = channel;
-        recordLogs("logs4-5", "Open 3rd session");
-        return window.reader.openSession();
-      })
-      .then((session) => {
-        recordLogs("logs4-5", "3rd sesson opens a logical channel to PPSE applet ...");
-        return session.openLogicalChannel(hexString2byte(window.AID.PPSE));
-      })
-      .then((channel) => {
-        window.c3 = channel;
         recordLogs("logs4-5", "1st channel transmit getTemplate command");
         return window.c1.transmit(window.APDU.PPSE.getTemplate);
       })
@@ -383,13 +374,6 @@ var SETest = {
         }
         recordLogs("logs4-5", "2nd channel transmit getTemplate command");
         return window.c2.transmit(window.APDU.PPSE.getTemplate);   
-      })
-      .then((response) =>  {
-        if (checkResponse("logs4-5", response, 0x90, 0x00) == false) {
-          window.result45 = false;
-        }
-        recordLogs("logs4-5", "3rd channel transmit getTemplate command");
-        return window.c3.transmit(window.APDU.PPSE.getTemplate);
       })
       .then((response) => {
         if (checkResponse("logs4-5", response, 0x90, 0x00) == false) {
