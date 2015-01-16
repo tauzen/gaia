@@ -15,5 +15,6 @@
     "mobileconnection":{}
   },
   "secure_element_access": ["*"],
+  "secure_element_sig": "A683A44507D67C5A58D23BCF2DCBABED9AEC2128",
   "default_locale": "en"
 }

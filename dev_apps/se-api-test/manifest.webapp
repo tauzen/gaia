@@ -18,5 +18,6 @@
   "permissions": {
     "secureelement-manage": {},
     "mobileconnection":{}
-  }
+  },
+  "secure_element_sig": "A683A44507D67C5A58D23BCF2DCBABED9AEC2128"
 }
