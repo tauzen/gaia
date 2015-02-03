@@ -42,29 +42,28 @@ var Utils = {
 
 var APDU = {
   // gets the response from SIM, can be used to retireve channel select
-  getResponse: new SECommand(0x00, 0xC0, 0x00, 0x00, new Uint8Array()),
-  readBinary: new SECommand(0x00, 0xB0, 0x00, 0x00, new Uint8Array()),
-  selectODF: new SECommand(0x00, 0xA4, 0x00, 0x04, new Uint8Array([0x50, 0x31])),
+  getResponse: { cla: 0x00, ins: 0xC0, p1: 0x00, p2: 0x00, data: new Uint8Array() },
+  readBinary: { cla: 0x00, ins: 0xB0, p1: 0x00, p2: 0x00, data: new Uint8Array() },
+  selectODF: { cla: 0x00, ins: 0xA4, p1: 0x00, p2: 0x04, data: new Uint8Array([0x50, 0x31]) },
   CRS: {
     // Get applet version number and global update counter
-    getData: new SECommand(0x80, 0xCA, 0x00, 0xA5, new Uint8Array()),
+    getData: { cla: 0x80, ins: 0xCA, p1: 0x00, p2: 0xA5, data: new Uint8Array() },
     // Get status of applets and Security Domains only.
     // The ISD is ignored. Get first or only occurrence
-    getStatusAll1st: new SECommand(0x80, 0xF2, 0x40, 0x00,
-      new Uint8Array([
+    getStatusAll1st: { cla: 0x80, ins: 0xF2, p1: 0x40, p2: 0x00, data: new Uint8Array([
         0x4F, 0x00, // applet AID, empty here
         0x5C, 0x03, // tag list to be returned
         0x4F, // AID
         0x9F, 0x70  // applet life cycle state - first byte;
                     // contactless activation state - second byte
-      ])),
+    ])},
     // Get status of applets and Security Domains only.
     // The ISD is ignored. Get next occurrence(s), if SW is 63h10h
-    getStatusAllNext: new SECommand(0x80, 0xF2, 0x40, 0x01,
-      new Uint8Array([0x4F, 0x00, 0x5C, 0x03, 0x4F, 0x9F, 0x70])),
+    getStatusAllNext: { cla: 0x80, ins: 0xF2, p1: 0x40, p2: 0x01,
+                       data: new Uint8Array([0x4F, 0x00, 0x5C, 0x03, 0x4F, 0x9F, 0x70])},
     // Get status of applet identified with AID
     getStatusAID: (aid) => {
-      return new SECommand(0x81, 0xF2, 0x40, 0x00,
+      return { cla: 0x81, ins: 0xF2, p1: 0x40, p2: 0x00, data:
         Utils.joinUint8Arrays(
           [0x4F, 0x0F], // applet AID
           Utils.hexString2byte(aid),
@@ -75,20 +74,19 @@ var APDU = {
            0x81 // selection priority
           ]
         )
-      );
+      };
     },
     fastPayOff: (aid) => {
-      return new SECommand(0x80, 0xF0, 0x01, 0x00,
-        Utils.joinUint8Arrays([0x4F, 0x0F], Utils.hexString2byte(aid)));
+      return { cla: 0x80, ins: 0xF0, p1: 0x01, p2: 0x00, data:
+       Utils.joinUint8Arrays([0x4F, 0x0F], Utils.hexString2byte(aid)) };
     },
     fastPayOn: (aid) => {
-      return new SECommand(0x80, 0xF0, 0x01, 0x01,
-        Utils.joinUint8Arrays([0x4F, 0x0F], Utils.hexString2byte(aid)));
+      return { cla: 0x80, ins: 0xF0, p1: 0x01, p2: 0x01,
+               data: Utils.joinUint8Arrays([0x4F, 0x0F], Utils.hexString2byte(aid)) };
     },
-    nfcActivate: new SECommand(0x80, 0xF0, 0x04, 0x80,
-                                      new Uint8Array([0x80, 0x01, 0x40])),
-    nfcDeactivate: new SECommand(0x80, 0xF0, 0x04, 0x00,
-                                        new Uint8Array([0x80, 0x01, 0x40]))
+    nfcActivate: { cla: 0x80, ins: 0xF0, p1: 0x04, p2: 0x80,
+                   data: new Uint8Array([0x80, 0x01, 0x40]) },
+    nfcDeactivate: { cla: 0x80, ins: 0xF0, p1: 0x04, p2: 0x00, data: new Uint8Array([0x80, 0x01, 0x40]) }
   }
 };
 
