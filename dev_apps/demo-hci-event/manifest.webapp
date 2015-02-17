@@ -13,9 +13,5 @@
   "permissions": {
     "nfc-hci-events":{}
   },
-  "messages": [
-     { "nfc-hci-event-transaction": "/index.html" }
-  ],
-  "secure_element_access": ["*"],
   "default_locale": "en"
 }
