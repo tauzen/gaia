@@ -53,7 +53,7 @@ window.addEventListener('DOMContentLoaded', function() {
     }
     window.testSESession = session;
     
-    updateTestStatus('test-channel-resp', 'pending', 'in progress');
+    updateTestStatus('test-channel-resp', 'pending', 'in progress'); // cut here
     log('Opening channel to ppse, AID' + AID.ppse);
     return session.openLogicalChannel(Utils.hexString2byte(AID.ppse));
   })
@@ -166,11 +166,12 @@ window.addEventListener('DOMContentLoaded', function() {
     } else {
       updateTestStatus('test-double-channel', 'error',
                        'Objects not closed, failed.');
-    }
+    } // finish cutting here
   })
   .then(() => log('Channel closed, tests finished.'))
-  .catch(() => {
+  .catch((e) => {
     log('Promise chain broken, test failed');
+    console.log(e);
     window.testSESession.closeAll();
   });
 });
