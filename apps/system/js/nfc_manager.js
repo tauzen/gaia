@@ -262,6 +262,13 @@
       var state = !enabled ? this.NFC_HW_STATE.DISABLING :
         (Service.locked ? this.NFC_HW_STATE.DISABLE_DISCOVERY :
                           this.NFC_HW_STATE.ENABLING);
+
+      // TODO introduce a proper state machine pattern, Bug XXXXX
+      if (this._hwState === this.NFC_HW_STATE.OFF &&
+          state === this.NFC_HW_STATE.DISABLE_DISCOVERY) {
+        state = this.NFC_HW_STATE.ENABLING;
+      }
+
       this._changeHardwareState(state);
     },
 
