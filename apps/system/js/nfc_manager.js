@@ -203,8 +203,7 @@
       window.dispatchEvent(new CustomEvent('nfc-tech-lost'));
 
       // Clean up P2P UI events
-      window.removeEventListener('shrinking-sent', this);
-      window.dispatchEvent(new CustomEvent('shrinking-stop'));
+      this._cleanP2PUI();
     },
 
     _handle_screenchange: function(evt) {
@@ -355,22 +354,29 @@
           if (activeApp.isTransitioning() || activeApp.isSheetTransitioning()) {
             return;
           }
-          // Top visible application's manifest Url is registered;
-          // Start Shrink / P2P UI and wait for user to accept P2P event
-          window.dispatchEvent(new CustomEvent('shrinking-start'));
 
-          var handleShrinkingSent = () => {
-            window.removeEventListener('shrinking-sent', handleShrinkingSent);
-
-            this._dispatchP2PUserResponse();
-            window.dispatchEvent(new CustomEvent('shrinking-stop'));
-          };
-
-          window.addEventListener('shrinking-sent', handleShrinkingSent);
+          this._initP2PUI();
         } else {
           this._logVisibly('CheckP2PRegistration failed');
+          this._cleanP2PUI();
         }
       });
+    },
+
+    _cleanP2PUI: function() {
+      window.removeEventListener('shrinking-sent', this._handleShrinkingSent);
+      window.dispatchEvent(new CustomEvent('shrinking-stop'));
+    },
+
+    _initP2PUI: function() {
+      window.dispatchEvent(new CustomEvent('shrinking-start'));
+
+      this._handleShrinkingSent = () => {
+        this._cleanP2PUI();
+        this._dispatchP2PUserResponse();
+      };
+
+      window.addEventListener('shrinking-sent', this._handleShrinkingSent);
     },
 
     /**
