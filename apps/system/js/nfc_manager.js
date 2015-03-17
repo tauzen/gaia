@@ -51,6 +51,12 @@
     'isActive'
   ];
 
+  NfcManager.EVENTS = [
+    'screenchange',
+    'lockscreen-appopened',
+    'lockscreen-appclosed'
+  ];
+
   BaseModule.create(NfcManager, {
     name: 'NfcManager',
 
@@ -104,10 +110,6 @@
       window.navigator.mozSetMessageHandler('nfc-manager-tech-lost',
         (msg) => this._handleTechLost(msg));
 
-      window.addEventListener('screenchange', this);
-      window.addEventListener('lockscreen-appopened', this);
-      window.addEventListener('lockscreen-appclosed', this);
-
       this._onDebugChanged = (enabled) => { DEBUG = enabled; };
 
       // reseting nfc.status to default state, as the device could've
@@ -125,10 +127,6 @@
       window.navigator.mozSetMessageHandler('nfc-manager-tech-discovered',
                                             null);
       window.navigator.mozSetMessageHandler('nfc-manager-tech-lost', null);
-
-      window.removeEventListener('screenchange', this);
-      window.removeEventListener('lockscreen-appopened', this);
-      window.removeEventListener('lockscreen-appclosed', this);
     },
 
     '_observe_nfc.enabled': function(enabled) {
@@ -209,39 +207,32 @@
       window.dispatchEvent(new CustomEvent('shrinking-stop'));
     },
 
-    /**
-     * Default event handler. Always listens for lockscreen-appopened,
-     * lockscreen-appclosed, screenchange. During P2P sharing flow it
-     * listens for shrinking-sent event dispatched from ShrinkingUI
-     * @memberof NfcManager.prototype
-     * @param {Event} event
-     */
-    handleEvent: function nm_handleEvent(evt) {
-      var state;
-      switch (evt.type) {
-        case 'lockscreen-appopened': // Fall through
-        case 'lockscreen-appclosed':
-        case 'screenchange':
-          if (!this.isActive()) {
-            return;
-          }
-          state = (ScreenManager.screenEnabled && !Service.locked) ?
-                    this.NFC_HW_STATE.ENABLE_DISCOVERY :
-                    this.NFC_HW_STATE.DISABLE_DISCOVERY;
-          if (state === this._hwState) {
-            return;
-          }
-          this._changeHardwareState(state);
-          break;
-        case 'shrinking-sent':
-          window.removeEventListener('shrinking-sent', this);
-          // Notify lower layers that User has acknowledged to send NDEF msg
-          this._dispatchP2PUserResponse();
+    _handle_screenchange: function(evt) {
+      this._changeHwDiscoveryState();
+    },
 
-          // Stop the P2P UI
-          window.dispatchEvent(new CustomEvent('shrinking-stop'));
-          break;
+    '_handle_lockscreen-appopened': function(evt) {
+      this._changeHwDiscoveryState();
+    },
+
+    '_handle_lockscreen-appclosed': function(evt) {
+      this._changeHwDiscoveryState();
+    },
+
+    _changeHwDiscoveryState: function() {
+      if (!this.isActive()) {
+        return;
       }
+
+      var newState = (ScreenManager.screenEnabled && !Service.locked) ?
+                      this.NFC_HW_STATE.ENABLE_DISCOVERY :
+                      this.NFC_HW_STATE.DISABLE_DISCOVERY;
+
+      if (newState === this._hwState) {
+        return;
+      }
+
+      this._changeHardwareState(newState);
     },
 
     /**
@@ -368,13 +359,16 @@
           // Start Shrink / P2P UI and wait for user to accept P2P event
           window.dispatchEvent(new CustomEvent('shrinking-start'));
 
-          // Setup listener for user response on P2P UI now
-          window.addEventListener('shrinking-sent', this);
+          var handleShrinkingSent = () => {
+            window.removeEventListener('shrinking-sent', handleShrinkingSent);
+
+            this._dispatchP2PUserResponse();
+            window.dispatchEvent(new CustomEvent('shrinking-stop'));
+          };
+
+          window.addEventListener('shrinking-sent', handleShrinkingSent);
         } else {
-          // Clean up P2P UI events
           this._logVisibly('CheckP2PRegistration failed');
-          window.removeEventListener('shrinking-sent', this);
-          window.dispatchEvent(new CustomEvent('shrinking-stop'));
         }
       });
     },
