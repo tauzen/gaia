@@ -20,7 +20,6 @@
 'use strict';
 
 (function(exports) {
-  var DEBUG = false;
 
   /**
    * NfcManager is responsible for NFC support. It controls NFC hardware
@@ -37,6 +36,7 @@
    */
   var NfcManager = function() {
   };
+
   NfcManager.SETTINGS = [
     'nfc.enabled',
     'nfc.debugging.enabled',
@@ -96,7 +96,7 @@
      * @memberof NfcManager.prototype
      */
     _start: function nm_start() {
-      this._debug('Starting NFC Manager');
+      this.debug('Starting NFC Manager');
       this._hwState = this.NFC_HW_STATE.OFF;
       LazyLoader.load(['js/nfc_icon.js']).then(function() {
         this.icon = new NfcIcon(this);
@@ -110,8 +110,6 @@
       window.navigator.mozSetMessageHandler('nfc-manager-tech-lost',
         (msg) => this._handleTechLost(msg));
 
-      this._onDebugChanged = (enabled) => { DEBUG = enabled; };
-
       // reseting nfc.status to default state, as the device could've
       // been restarted when HW change was in progress
       this.writeSetting({ 'nfc.status':'disabled' });
@@ -122,20 +120,40 @@
      * @memberof NfcManager.prototype
      */
     _stop: function nm_stop() {
-      this._debug('Stopping NFC Manager');
+      this.debug('Stopping NFC Manager');
 
       window.navigator.mozSetMessageHandler('nfc-manager-tech-discovered',
                                             null);
       window.navigator.mozSetMessageHandler('nfc-manager-tech-lost', null);
     },
 
+    /**
+     * Basing on the new value of NFC Setting computes new NFC HW state
+     * and uses {@link NfcManager#_changeHardwareState} to set it
+     * @memberof NfcManager.prototype
+     * @param {boolean} enabled - NFC setting value
+     */
     '_observe_nfc.enabled': function(enabled) {
-      this._nfcSettingsChanged(enabled);
-      DEBUG = enabled;
+      this.debug('nfc.enabled: ' + enabled + ', hwState: ' + this._hwState);
+      if (this.isActive() === enabled || this.isInTransition()) {
+        return;
+      }
+
+      var state = !enabled ? this.NFC_HW_STATE.DISABLING :
+        (Service.locked ? this.NFC_HW_STATE.DISABLE_DISCOVERY :
+                          this.NFC_HW_STATE.ENABLING);
+
+      // TODO introduce a proper state machine pattern, Bug XXXXX
+      if (this._hwState === this.NFC_HW_STATE.OFF &&
+          state === this.NFC_HW_STATE.DISABLE_DISCOVERY) {
+        state = this.NFC_HW_STATE.ENABLING;
+      }
+
+      this._changeHardwareState(state);
     },
 
     '_observe_nfc.debugging.enabled': function(enabled) {
-      this._onDebugChanged(enabled);
+      this.DEBUG = enabled;
     },
 
     /**
@@ -171,7 +189,7 @@
      * @param {string} msg.type set to 'techDiscovered'
      */
     _handleTechDiscovered: function nm_handleTechDiscovered(msg) {
-      this._debug('Technology Discovered: ' + JSON.stringify(msg));
+      this.debug('Technology Discovered: ' + JSON.stringify(msg));
       msg = msg || {};
       msg.records = Array.isArray(msg.records) ? msg.records : [];
 
@@ -187,7 +205,7 @@
       } else if (msg.peer) {
         this._checkP2PRegistration();
       } else {
-        this._logVisibly('Got tag without NDEF records, ignoring.');
+        this.debug('Got tag without NDEF records, ignoring.');
       }
     },
 
@@ -197,7 +215,7 @@
      * @param {Object} msg - tech lost message
      */
     _handleTechLost: function nm_handleTechLost(msg) {
-      this._debug('Technology Lost: ' + JSON.stringify(msg));
+      this.debug('Technology Lost: ' + JSON.stringify(msg));
 
       window.navigator.vibrate([125, 50, 25]);
       window.dispatchEvent(new CustomEvent('nfc-tech-lost'));
@@ -235,40 +253,13 @@
     },
 
     /**
-     * Basing on the new value of NFC Setting computes new NFC HW state
-     * and uses {@link NfcManager#_changeHardwareState} to set it
-     * @memberof NfcManager.prototype
-     * @param {boolean} enabled - NFC setting value
-     */
-    _nfcSettingsChanged: function nm_nfcSettingsChanged(enabled) {
-      this._debug('_nfcSettingsChanged, nfc.enabled: ' + enabled);
-
-      if (this.isActive() === enabled || this.isInTransition()) {
-        this._debug('_nfcSettingsChanged ignoring settings change');
-        return;
-      }
-
-      var state = !enabled ? this.NFC_HW_STATE.DISABLING :
-        (Service.locked ? this.NFC_HW_STATE.DISABLE_DISCOVERY :
-                          this.NFC_HW_STATE.ENABLING);
-
-      // TODO introduce a proper state machine pattern, Bug XXXXX
-      if (this._hwState === this.NFC_HW_STATE.OFF &&
-          state === this.NFC_HW_STATE.DISABLE_DISCOVERY) {
-        state = this.NFC_HW_STATE.ENABLING;
-      }
-
-      this._changeHardwareState(state);
-    },
-
-    /**
      * Triggers DOM request to change NFC Hardware state
      * @memberof NfcManager.prototype
      * @param {string} state - new hardware state, one of
      * {@link NfcManager#NFC_HW_STATE}
      */
     _changeHardwareState: function nm_changeHardwareState(state) {
-      this._debug('_changeHardwareState - state : ' + state);
+      this.debug('_changeHardwareState - state : ' + state);
       this._hwState = state;
       var nfcdom = window.navigator.mozNfc;
       if (!nfcdom) {
@@ -295,13 +286,13 @@
 
 
       promise.then(() => {
-        this._debug('_changeHardwareState ' + state + ' success');
+        this.debug('_changeHardwareState ' + state + ' success');
         // checking if NFC HW was in transition states and move to proper state
         if (this.isInTransition()) {
           this._handleNFCOnOff(this._hwState === this.NFC_HW_STATE.ENABLING);
         }
       }).catch(e => {
-        this._logVisibly('_changeHardwareState ' + state + ' error ' + e);
+        this.error('_changeHardwareState ' + state + ' error ' + e);
         // rollback to previous state in case of transition states
         if (this.isInTransition()) {
           this._handleNFCOnOff(this._hwState !== this.NFC_HW_STATE.ENABLING);
@@ -310,7 +301,7 @@
     },
 
     _handleNFCOnOff: function nm_handleNFCOnOff(isOn) {
-      this._debug('_handleNFCOnOf is on:' + isOn);
+      this.debug('_handleNFCOnOf is on:' + isOn);
 
       this._hwState = (isOn) ? this.NFC_HW_STATE.ON : this.NFC_HW_STATE.OFF;
       this.icon && this.icon.update();
@@ -357,7 +348,7 @@
 
           this._initP2PUI();
         } else {
-          this._logVisibly('CheckP2PRegistration failed');
+          this.debug('CheckP2PRegistration failed');
           this._cleanP2PUI();
         }
       });
@@ -405,7 +396,7 @@
      * @param {Array} records - NDEF Message
      */
     _fireNDEFDiscovered: function nm_fireNDEFDiscovered(records) {
-      this._debug('_fireNDEFDiscovered: ' + JSON.stringify(records));
+      this.debug('_fireNDEFDiscovered: ' + JSON.stringify(records));
       var smartPoster = this._getSmartPoster(records);
       var record = smartPoster || records[0] || { tnf: NDEF.TNF_EMPTY };
 
@@ -416,10 +407,10 @@
         options.data.records = records;
       }
 
-      this._debug('_fireNDEFDiscovered activity options: ', options);
+      this.debug('_fireNDEFDiscovered activity: ', JSON.stringify(options));
       var activity = new MozActivity(options);
       activity.onerror = () => {
-        this._logVisibly('Firing nfc-ndef-discovered activity failed');
+        this.debug('Firing nfc-ndef-discovered activity failed');
       };
     },
 
@@ -509,32 +500,6 @@
       }
 
       return options;
-    },
-
-    /**
-     * Debug function, prints log to logcat only if DEBUG flag is true
-     * @memberof NfcManager.prototype
-     * @param {string} msg - debug message
-     * @param {Object} optObject - object to log
-     */
-    _debug: function nm_debug(msg, optObject) {
-      if (DEBUG) {
-        this._logVisibly(msg,optObject);
-      }
-    },
-
-    /**
-     * Logs message in logcat
-     * @memberof NfcManager.prototype
-     * @param {string} msg - message
-     * @param {Object} optObject - object log (will be JSON.stringify)
-     */
-    _logVisibly: function nm_logVisibly(msg, optObject) {
-      var output = '[NfcManager]: ' + msg;
-      if (optObject) {
-        output += JSON.stringify(optObject);
-      }
-      console.log(output);
     }
   });
 }());
