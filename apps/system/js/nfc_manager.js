@@ -127,7 +127,6 @@
       window.navigator.mozSetMessageHandler('nfc-manager-tech-lost', null);
 
       window.removeEventListener('screenchange', this);
-      window.removeEventListener('activeappchanged', this);
       window.removeEventListener('lockscreen-appopened', this);
       window.removeEventListener('lockscreen-appclosed', this);
     },
