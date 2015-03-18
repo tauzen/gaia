@@ -84,30 +84,6 @@
     name: 'NfcManager',
 
     /**
-     * Possible NFC hardware states
-     * @memberof NfcManager.prototype
-     * @readonly
-     * @enum {string}
-     */
-    NFC_HW_STATE: {
-      DISABLING: 'nfcDisabling',
-      OFF: 'nfcOff',
-      ENABLING: 'nfcEnabling',
-      // active states below
-      ON: 'nfcOn',
-      /**
-       * Active state in which NFC HW is polling for NFC tags/peers
-       * @todo merge with |ON|
-       */
-      ENABLE_DISCOVERY: 'nfcEnableDiscovery',
-      /**
-       * Active state with low power consumption, NFC HW is not actively
-       * polling for NFC tags/peers. Card emulation is active.
-       */
-      DISABLE_DISCOVERY: 'nfcDisableDiscovery'
-    },
-
-    /**
      * Current NFC Hardware state
      * @memberof NfcManager.prototype
      * @type {String}
@@ -151,7 +127,7 @@
     },
 
     '_observe_nfc.enabled': function(enabled) {
-      this.changeState(enabled ? 'enable' : 'disable');
+      this._doNfcStateTransition(enabled ? 'enable' : 'disable');
     },
 
     '_observe_nfc.debugging.enabled': function(enabled) {
@@ -161,15 +137,15 @@
     _handle_screenchange: function(evt) {
       var nfcEvt = ScreenManager.screenEnabled && !Service.locked ?
                     'enable-discovery' : 'disable-discovery';
-      this.changeState(nfcEvt);
+      this._doNfcStateTransition(nfcEvt);
     },
 
     '_handle_lockscreen-appopened': function(evt) {
-      this.changeState('enable-discovery');
+      this._doNfcStateTransition('enable-discovery');
     },
 
     '_handle_lockscreen-appclosed': function(evt) {
-      this.changeState('disable-discovery');
+      this._doNfcStateTransition('disable-discovery');
     },
 
     /**
@@ -240,7 +216,7 @@
       this._cleanP2PUI();
     },
 
-    changeState: function(evt) {
+    _doNfcStateTransition: function(evt) {
       var evtIdx = NfcHwEvents.indexOf(evt);
       var state = NfcHwStateTable[this._hwState][evtIdx];
       if (!state) {
@@ -273,12 +249,12 @@
     },
 
     _changeNfcHwState: function() {
-      var hwChangeSuccess = () => this.changeState('hw-change-success');
-      var hwChangeFailure = () => this.changeState('hw-change-failure');
+      var onsuccess = () => this._doNfcStateTransition('hw-change-success');
+      var onfailure = () => this._doNfcStateTransition('hw-change-failure');
 
       var nfcdom = window.navigator.mozNfc;
       if (!nfcdom) {
-        hwChangeFailure();
+        onfailure();
         return;
       }
 
@@ -296,7 +272,7 @@
           break;
       }
 
-      promise.then(hwChangeSuccess).catch(hwChangeFailure);
+      promise.then(onsuccess).catch(onfailure);
     },
 
     /**
