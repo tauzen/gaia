@@ -223,12 +223,9 @@
     },
 
     _changeNfcHwState: function() {
-      var onsuccess = () => this._doNfcStateTransition('hw-change-success');
-      var onfailure = () => this._doNfcStateTransition('hw-change-failure');
-
       var nfcdom = window.navigator.mozNfc;
       if (!nfcdom) {
-        onfailure();
+        this._doNfcStateTransition('hw-change-failure');
         return;
       }
 
@@ -244,9 +241,12 @@
         case 'polling-off':
           promise = nfcdom.stopPoll();
           break;
+        default:
+          return;
       }
 
-      promise.then(onsuccess).catch(onfailure);
+      promise.then(() => this._doNfcStateTransition('hw-change-success'))
+      .catch(() => this._doNfcStateTransition('hw-change-failure'));
     },
 
     /**
