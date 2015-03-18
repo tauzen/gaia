@@ -21,27 +21,17 @@
 
 (function(exports) {
 
-  const HW_DISABLING = 'nfcDisabling';
-  const HW_OFF = 'nfcOff';
-  const HW_ENABLING = 'nfcEnabling';
-  const HW_ON = 'nfcOn';
-  // active state in which NFC HW is polling for NFC tags/peers
-  const HW_ON_START_POLL = 'nfcEnableDiscovery';
-  // active state with low power consumption, NFC HW is not actively
-  // polling for NFC tags/peers. Card emulation is active.
-  const HW_ON_STOP_POLL = 'nfcDisableDiscovery';
-
   const NfcHwEvents =
-    ['enable', 'disable', 'enable-discovery', 'disable-discovery',
+    ['enable', 'disable', 'enable-polling', 'disable-polling',
      'hw-change-success', 'hw-change-failure'];
 
   const NfcHwStateTable = {
-    HW_DISABLING: [null, null, null, null, HW_OFF, HW_ON],
-    HW_OFF: [HW_ENABLING, null, null, null, null, null],
-    HW_ENABLING: [null, null, null, null, HW_ON, HW_OFF],
-    HW_ON: [null, HW_DISABLING, HW_ON_START_POLL, HW_ON_STOP_POLL, null, null],
-    HW_ON_START_POLL: [null, HW_DISABLING, null, HW_ON_STOP_POLL, null, null],
-    HW_ON_STOP_POLL: [null, HW_DISABLING, HW_ON_START_POLL, null, null, null]
+    'disabling': [null, null, null, null, 'disabled', 'enabled'],
+    'disabled': ['enabling', null, null, null, null, null],
+    'enabling': [null, null, null, null, 'enabled', 'disabled'],
+    'enabled': [null, 'disabling', 'polling-on', 'polling-off', null, null],
+    'polling-on': [null, 'disabling', null, 'polling-off', null, null],
+    'polling-off': [null, 'disabling', 'polling-on', null, null, null]
   };
 
   /**
@@ -96,7 +86,7 @@
      */
     _start: function nm_start() {
       this.debug('Starting NFC Manager');
-      this._hwState = HW_OFF;
+      this._hwState = 'disabled';
       LazyLoader.load(['js/nfc_icon.js']).then(function() {
         this.icon = new NfcIcon(this);
         this.icon.start();
@@ -136,16 +126,16 @@
 
     _handle_screenchange: function(evt) {
       var nfcEvt = ScreenManager.screenEnabled && !Service.locked ?
-                    'enable-discovery' : 'disable-discovery';
+                    'enable-polling' : 'disable-polling';
       this._doNfcStateTransition(nfcEvt);
     },
 
     '_handle_lockscreen-appopened': function(evt) {
-      this._doNfcStateTransition('enable-discovery');
+      this._doNfcStateTransition('disable-polling');
     },
 
     '_handle_lockscreen-appclosed': function(evt) {
-      this._doNfcStateTransition('disable-discovery');
+      this._doNfcStateTransition('enable-polling');
     },
 
     /**
@@ -154,8 +144,8 @@
      * returns {boolean} isActive
      */
     isActive: function nm_isActive() {
-      return this._hwState === HW_ON || this._hwState === HW_ON_START_POLL ||
-             this._hwState === HW_ON_STOP_POLL;
+      return this._hwState === 'enabled' || this._hwState === 'polling-on' ||
+             this._hwState === 'polling-off';
     },
 
     /**
@@ -220,19 +210,14 @@
 
     _notifyNfcStateChanged: function() {
       switch (this._hwState) {
-        case HW_DISABLING:
-          this.writeSetting({ 'nfc.status':'disabling' });
+        case 'disabling':
+        case 'enabling':
+          this.writeSetting({ 'nfc.status': this._hwState });
           break;
-        case HW_OFF:
+        case 'disabled':
+        case 'enabled':
+          this.writeSetting({ 'nfc.status': this._hwState });
           this.icon && this.icon.update();
-          this.writeSetting({ 'nfc.status': 'disabled' });
-          break;
-        case HW_ENABLING:
-          this.writeSetting({ 'nfc.status': 'enabling' });
-          break;
-        case HW_ON:
-          this.icon && this.icon.update();
-          this.writeSetting({ 'nfc.status': 'enabled' });
           break;
       }
     },
@@ -249,14 +234,14 @@
 
       var promise;
       switch (this._hwState) {
-        case HW_DISABLING:
+        case 'disabling':
           promise = nfcdom.powerOff();
           break;
-        case HW_ENABLING:
-        case HW_ON_START_POLL:
+        case 'enabling':
+        case 'polling-on':
           promise = nfcdom.startPoll();
           break;
-        case HW_ON_STOP_POLL:
+        case 'polling-off':
           promise = nfcdom.stopPoll();
           break;
       }
