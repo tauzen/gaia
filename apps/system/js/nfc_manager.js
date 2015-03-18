@@ -203,6 +203,7 @@
         return;
       }
 
+      this.debug('state: ' + this._hwState + '[' + evt + ']' + ' -> ' + state);
       this._hwState = state;
       this._notifyNfcStateChanged();
       this._changeNfcHwState();
