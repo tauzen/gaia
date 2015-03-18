@@ -96,7 +96,7 @@
      */
     _start: function nm_start() {
       this.debug('Starting NFC Manager');
-      this._hwState = this.NFC_HW_STATE.OFF;
+      this._hwState = HW_OFF;
       LazyLoader.load(['js/nfc_icon.js']).then(function() {
         this.icon = new NfcIcon(this);
         this.icon.start();
@@ -154,19 +154,8 @@
      * returns {boolean} isActive
      */
     isActive: function nm_isActive() {
-      return this._hwState === this.NFC_HW_STATE.ON ||
-             this._hwState === this.NFC_HW_STATE.ENABLE_DISCOVERY ||
-             this._hwState === this.NFC_HW_STATE.DISABLE_DISCOVERY;
-    },
-
-    /**
-     * Returns true if NFC HW state change is in progress.
-     * @memberof NfcManager.prototype
-     * returns {boolean} isActive
-     */
-    isInTransition: function nm_isInTransition() {
-      return this._hwState === this.NFC_HW_STATE.ENABLING ||
-             this._hwState === this.NFC_HW_STATE.DISABLING;
+      return this._hwState === HW_ON || this._hwState === HW_ON_START_POLL ||
+             this._hwState === HW_ON_STOP_POLL;
     },
 
     /**
