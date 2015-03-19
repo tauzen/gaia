@@ -55,8 +55,7 @@
 
   NfcManager.SETTINGS = [
     'nfc.enabled',
-    'nfc.debugging.enabled',
-    'nfc.status'
+    'nfc.debugging.enabled'
   ];
 
   NfcManager.SUB_MODULES = [
