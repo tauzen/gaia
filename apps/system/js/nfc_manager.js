@@ -208,45 +208,42 @@
 
       this.debug('state: ' + this._hwState + '[' + evt + ']' + ' -> ' + state);
       this._hwState = state;
-      this._notifyNfcStateChanged();
-      this._changeNfcHwState();
+      this._processNfcStateChange();
     },
 
-    _notifyNfcStateChanged: function() {
+    _processNfcStateChange: function() {
+      var nfc = window.navigator.mozNfc;
+      var promise;
+
       switch (this._hwState) {
         case 'disabling':
-        case 'enabling':
           this.writeSetting({ 'nfc.status': this._hwState });
+          promise = nfc.powerOff();
           break;
         case 'disabled':
+          this.writeSetting({ 'nfc.status': this._hwState });
+          this.icon && this.icon.update();
+          break;
+        case 'enabling':
+          this.writeSetting({ 'nfc.status': this._hwState });
+          promise = nfc.startPoll();
+          break;
         case 'enabled':
           this.writeSetting({ 'nfc.status': this._hwState });
           this.icon && this.icon.update();
           break;
-      }
-    },
-
-    _changeNfcHwState: function() {
-      var nfc = window.navigator.mozNfc;
-
-      var promise;
-      switch (this._hwState) {
-        case 'disabling':
-          promise = nfc.powerOff();
-          break;
-        case 'enabling':
         case 'polling-on':
           promise = nfc.startPoll();
           break;
         case 'polling-off':
           promise = nfc.stopPoll();
           break;
-        default:
-          return;
       }
 
-      promise.then(() => this._doNfcStateTransition('hw-change-success'))
-      .catch(() => this._doNfcStateTransition('hw-change-failure'));
+      if (promise) {
+        promise.then(() => this._doNfcStateTransition('hw-change-success'))
+        .catch(() => this._doNfcStateTransition('hw-change-failure'));
+      }
     },
 
     /**
