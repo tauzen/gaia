@@ -21,16 +21,19 @@
 
 (function(exports) {
 
-  const NfcHwEvents =
+  const NFC_HW_EVENTS =
     ['enable', 'disable', 'enable-polling', 'disable-polling',
      'hw-change-success', 'hw-change-failure'];
 
-  const NfcHwStateTable = {
+  const NFC_HW_STATE_TABLE = {
     'disabling': [null, null, null, null, 'disabled', 'enabled'],
     'disabled': ['enabling', null, null, null, null, null],
     'enabling': [null, null, null, null, 'enabled', 'disabled'],
     'enabled': [null, 'disabling', 'polling-on', 'polling-off', null, null],
+    // enabled state in which NFC HW is polling for NFC tags/peers
     'polling-on': [null, 'disabling', null, 'polling-off', null, null],
+    // enabled state with low power consumption, NFC HW is not actively
+    // polling for NFC tags/peers. Card emulation is active.
     'polling-off': [null, 'disabling', 'polling-on', null, null, null]
   };
 
@@ -196,8 +199,8 @@
     },
 
     _doNfcStateTransition: function(evt) {
-      var evtIdx = NfcHwEvents.indexOf(evt);
-      var state = NfcHwStateTable[this._hwState][evtIdx];
+      var evtIdx = NFC_HW_EVENTS.indexOf(evt);
+      var state = NFC_HW_STATE_TABLE[this._hwState][evtIdx];
       if (!state) {
         this.debug('no transition from ' + this._hwState + '[' + evt + ']');
         return;
@@ -224,23 +227,19 @@
     },
 
     _changeNfcHwState: function() {
-      var nfcdom = window.navigator.mozNfc;
-      if (!nfcdom) {
-        this._doNfcStateTransition('hw-change-failure');
-        return;
-      }
+      var nfc = window.navigator.mozNfc;
 
       var promise;
       switch (this._hwState) {
         case 'disabling':
-          promise = nfcdom.powerOff();
+          promise = nfc.powerOff();
           break;
         case 'enabling':
         case 'polling-on':
-          promise = nfcdom.startPoll();
+          promise = nfc.startPoll();
           break;
         case 'polling-off':
-          promise = nfcdom.stopPoll();
+          promise = nfc.stopPoll();
           break;
         default:
           return;
@@ -289,11 +288,11 @@
 
     _cleanP2PUI: function() {
       window.removeEventListener('shrinking-sent', this._handleShrinkingSent);
-      window.dispatchEvent(new CustomEvent('shrinking-stop'));
+      this.publish('shrinking-stop', this, /* without prefix */ true);
     },
 
     _initP2PUI: function() {
-      window.dispatchEvent(new CustomEvent('shrinking-start'));
+      this.publish('shrinking-start', this, /* without prefix */ true);
 
       this._handleShrinkingSent = () => {
         this._cleanP2PUI();
