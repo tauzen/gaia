@@ -228,23 +228,6 @@ suite('Nfc Manager Functions', function() {
       window.dispatchEvent(new CustomEvent('screenchange'));
       assert.isTrue(stubDoTransition.withArgs('enable-polling').calledOnce);
     });
-
-    test('proper handling of shrinking-sent', function() {
-      var stubRemoveEventListner = this.sinon.stub(window,
-                                                   'removeEventListener');
-      var stubDispatchEvent = this.sinon.stub(window, 'dispatchEvent');
-      var stubDispatchP2PUserResponse = this.sinon.stub(nfcManager,
-        '_dispatchP2PUserResponse');
-      nfcManager.handleEvent(new CustomEvent('shrinking-sent'));
-
-      assert.isTrue(stubRemoveEventListner.calledOnce);
-      assert.equal(stubRemoveEventListner.getCall(0).args[0], 'shrinking-sent');
-      assert.equal(stubRemoveEventListner.getCall(0).args[1], nfcManager);
-
-      assert.isTrue(stubDispatchEvent.calledOnce);
-      assert.isTrue(stubDispatchP2PUserResponse.calledOnce);
-      assert.equal(stubDispatchEvent.getCall(0).args[0].type, 'shrinking-stop');
-    });
   });
 
   suite('_handleTechDiscovered', function() {
@@ -906,7 +889,61 @@ suite('Nfc Manager Functions', function() {
     });
   });
 
-  suite('dispatchP2PUserResponse', function() {
+  suite('_cleanP2PUI', function() {
+    test('removes "shrinking-sent" event listner', function() {
+      var stubRemoveListener = this.sinon.stub(window, 'removeEventListener');
+      var fakeListner = () => { return 'fake'; };
+      nfcManager._handleShrinkingSent = fakeListner;
+
+      nfcManager._cleanP2PUI();
+      assert.isTrue(stubRemoveListener.calledOnce);
+      assert.deepEqual(stubRemoveListener.firstCall.args,
+                       ['shrinking-sent', fakeListner]);
+    });
+
+    test('publishes "shrinking-stop" event', function() {
+      var stubPublish = this.sinon.stub(nfcManager, 'publish');
+
+      nfcManager._cleanP2PUI();
+      assert.isTrue(stubPublish.calledOnce);
+      assert.deepEqual(stubPublish.firstCall.args,
+                       ['shrinking-stop', nfcManager, true]);
+    });
+  });
+
+  suite('_initP2PUI', function() {
+    test('publishes "shrinking-start event"', function() {
+      var stubPublish = this.sinon.stub(nfcManager, 'publish');
+
+      nfcManager._initP2PUI();
+      assert.isTrue(stubPublish.calledOnce);
+      assert.deepEqual(stubPublish.firstCall.args,
+                       ['shrinking-start', nfcManager, true]);
+    });
+
+    test('adds "shrinking-sent" event listner', function() {
+      var stubAddListener = this.sinon.stub(window, 'addEventListener');
+
+      nfcManager._initP2PUI();
+      assert.isTrue(stubAddListener.calledOnce);
+      assert.deepEqual(stubAddListener.firstCall.args,
+                       ['shrinking-sent', nfcManager._handleShrinkingSent]);
+    });
+
+    test('"shrinking-sent" handler calls proper methods', function() {
+      var stubCleanP2PUI = this.sinon.stub(nfcManager, '_cleanP2PUI');
+      var stubDispatchP2P = this.sinon.stub(nfcManager,
+                                            '_dispatchP2PUserResponse');
+
+      nfcManager._initP2PUI();
+      window.dispatchEvent(new CustomEvent('shrinking-sent'));
+
+      assert.isTrue(stubCleanP2PUI.calledOnce, '_cleanP2PUI');
+      assert.isTrue(stubDispatchP2P.calledOnce, '_dispatchP2PUserResponse');
+    });
+  });
+
+  suite('_dispatchP2PUserResponse', function() {
     var realMozNfc = navigator.mozNfc;
 
     setup(function() {
@@ -926,7 +963,7 @@ suite('Nfc Manager Functions', function() {
     });
   });
 
-  suite('checkP2PRegistrations', function() {
+  suite('_checkP2PRegistrations', function() {
     var realMozNfc = navigator.mozNfc;
 
     setup(function() {
